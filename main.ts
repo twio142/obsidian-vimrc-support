@@ -406,12 +406,14 @@ export default class VimrcPlugin extends Plugin {
 			const availableCommands = (this.app as any).commands.commands;
 			if (!params?.args?.length || params.args.length != 1) {
 				console.log(`Available commands: ${Object.keys(availableCommands).join('\n')}`)
-				throw new Error(`obcommand requires exactly 1 parameter`);
+				return;
 			}
 			let view = this.getActiveView();
 			let editor = view.editor;
 			const command = params.args[0];
 			if (command in availableCommands) {
+				if (this.currentSelection?.length == 1)
+					editor.setSelections(this.currentSelection);
 				let callback = availableCommands[command].callback;
 				let checkCallback = availableCommands[command].checkCallback;
 				let editorCallback = availableCommands[command].editorCallback;
@@ -446,19 +448,9 @@ export default class VimrcPlugin extends Plugin {
 			let beginning = newArgs[0].replace("\\\\", "\\").replace("\\ ", " "); // Get the beginning surround text
 			let ending = newArgs[1].replace("\\\\", "\\").replace("\\ ", " "); // Get the ending surround text
 
-            let currentSelections = this.currentSelection;
-			var chosenSelection = currentSelections?.[0] ? currentSelections[0] : {anchor: editor.getCursor(), head: editor.getCursor()};
-			if (currentSelections?.length > 1) {
-				console.log("WARNING: Multiple selections in surround. Attempt to select matching cursor. (obsidian-vimrc-support)")
-				const cursorPos = editor.getCursor();
-				for (const selection of currentSelections) {
-					if (selection.head.line == cursorPos.line && selection.head.ch == cursorPos.ch) {
-						console.log("RESOLVED: Selection matching cursor found. (obsidian-vimrc-support)")
-						chosenSelection = selection;
-						break;
-					}
-				}
-			}
+			let currentSelections = this.currentSelection;
+			let mainIndex = (editor as any).cm.state.selection.mainIndex;
+			var chosenSelection = currentSelections?.[mainIndex] || {anchor: editor.getCursor(), head: editor.getCursor()};
 			if (editor.posToOffset(chosenSelection.anchor) === editor.posToOffset(chosenSelection.head)) {
 				// No range of selected text, so select word.
 				let wordAt = editor.wordAt(chosenSelection.head);
@@ -466,18 +458,18 @@ export default class VimrcPlugin extends Plugin {
 					chosenSelection = {anchor: wordAt.from, head: wordAt.to};
 				}
 			}
-            let currText;
-            if (editor.posToOffset(chosenSelection.anchor) > editor.posToOffset(chosenSelection.head)) {
-                currText = editor.getRange(chosenSelection.head, chosenSelection.anchor);
-            } else {
-                currText = editor.getRange(chosenSelection.anchor, chosenSelection.head);
-            }
+			if (editor.posToOffset(chosenSelection.anchor) > editor.posToOffset(chosenSelection.head)) {
+				[chosenSelection.anchor, chosenSelection.head] = [chosenSelection.head, chosenSelection.anchor]
+			}
+			let currText = editor.getRange(chosenSelection.anchor, chosenSelection.head);
 			editor.replaceRange(beginning + currText + ending, chosenSelection.anchor, chosenSelection.head);
 			// If no selection, place cursor between beginning and ending
 			if (editor.posToOffset(chosenSelection.anchor) === editor.posToOffset(chosenSelection.head)) {
 				chosenSelection.head.ch += beginning.length;
-				editor.setCursor(chosenSelection.head);
+			} else {
+				chosenSelection.head.ch += beginning.length + ending.length;
 			}
+			editor.setCursor(chosenSelection.head);
 		}
 
 		vimObject.defineEx("surround", "", (cm: any, params: any) => { surroundFunc(params.args); });
@@ -647,8 +639,10 @@ export default class VimrcPlugin extends Plugin {
 				if (extraCode[0] != '{' || extraCode[extraCode.length - 1] != '}')
 					throw new Error("Expected an extra code argument which is JS code surrounded by curly brackets: {...}");
 			}
+			const view = this.getActiveView();
 			let currentSelections = this.currentSelection;
-			var chosenSelection = currentSelections && currentSelections.length > 0 ? currentSelections[0] : null;
+			let mainIndex = (view.editor as any).cm.state.selection.mainIndex;
+			var chosenSelection = currentSelections?.[mainIndex] || {anchor: view.editor.getCursor(), head: view.editor.getCursor()};
 			let content = '';
 			try {
 				content = await this.app.vault.adapter.read(fileName);
@@ -656,7 +650,6 @@ export default class VimrcPlugin extends Plugin {
 				throw new Error(`Cannot read file ${params.args[0]} from vault root: ${e.message}`);
 			}
 			const command = Function('editor', 'view', 'selection', content + extraCode);
-			const view = this.getActiveView();
 			command(view.editor, view, chosenSelection);
 		});
 	}
