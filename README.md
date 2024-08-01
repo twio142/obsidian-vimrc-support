@@ -8,6 +8,12 @@ For users of the Obsidian.md Vim mode, this is very useful for making various se
 Note that this plugin is **not** the Vim support of Obsidian -- that support is built-in and you can perfectly use Obsidian in Vim mode without this plugin.
 This plugin merely implements the ability to load a persistent configuration and adds a few extras.
 
+## Maintainer Needed
+
+While I am still around for some urgent fixes, especially when the plugin stops working due to Obsidian API changes API, I am no longer able to give it the attention it deserves.
+
+Anyone who wishes to take over, please message me.
+
 ## Usage
 
 First and foremost, make sure you have the Obsidian Vim key bindings turned on -- see Editor -> Vim key bindings.
@@ -68,6 +74,13 @@ Commands that fail don't generate any visible error for now.
 **Important tip!** Before adding commands to your Vimrc file, you should try them in Obsidian's normal mode (type '`:`' in the editor) to make sure they work as expected.
 CodeMirror's Vim mode has some limitations and bugs and not all commands will work like you'd expect.
 In some cases you can find workarounds by experimenting, and the easiest way to do that is by trying interactively rather than via the Vimrc file.
+
+Finally, this plugin also provides the following motions/mappings by default:
+
+- `[[` and `]]` to jump to the previous and next Markdown heading.
+- `zk` and `zj` to move up and down while skipping folds.
+- `gl` and `gL` to jump to the next and previous link.
+- `gf` to open the link or file under the cursor (temporarily moving the cursor if necessary—e.g. if it's on the first square bracket of a [[Wikilink]]).
 
 ## Installation
 
@@ -212,12 +225,11 @@ nmap zR :unfoldall
 exmap foldall obcommand editor:fold-all
 nmap zM :foldall
 
-" Emulate Tab Switching https://vimhelp.org/tabpage.txt.html#gt
-" requires Cycle Through Panes Plugins https://obsidian.md/plugins?id=cycle-through-panes
-exmap tabnext obcommand cycle-through-panes:cycle-through-panes
+exmap tabnext obcommand workspace:next-tab
 nmap gt :tabnext
-exmap tabprev obcommand cycle-through-panes:cycle-through-panes-reverse
+exmap tabprev obcommand workspace:previous-tab
 nmap gT :tabprev
+
 ```
 
 ## Fixed Keyboard Layout in Normal Mode
@@ -255,6 +267,7 @@ If you understand the risks and choose to use this feature, turn on "Support JS 
 
 There are two ways to define JS-based commands.
 
+#### JSCommand - JSFunction
 **The `jscommand` Ex command** defines a JS function that has an `editor: Editor`, a `view: MarkdownView` and a `selection: EditorSelection` arguments (see the [Obsidian API](https://github.com/obsidianmd/obsidian-api/blob/master/obsidian.d.ts) if you're not sure what these are).
 You define only the body of the function, in a single line wrapped by curly braces, e.g.:
 
@@ -270,11 +283,14 @@ exmap logCursor jscommand { console.log(editor.getCursor()); }
 nmap <C-q> :logCursor
 ```
 
+#### JSCommand - JSFile
 Another version of the same functionality is **the `jsfile` Ex command**, which executes code from a file you give as a parameter, then appends another optional piece of code to it (e.g. in case you want to store several helper methods in a file and launch different ones as part of different commands).
+
+The `jsfile` should be placed in your vault (alongside, e.g., your markdown files).
 
 As above, the code running as part of `jsfile` has the arguments `editor: Editor`, `view: MarkdownView` and `selection: EditorSelection`.
 
-Here's an example from my own `.obsidian.vimrc` that maps `]]` and `[[` to jump to the next/previous Markdown header:
+Here's an example `.obsidian.vimrc` entry that maps `]]` and `[[` to jump to the next/previous Markdown heading. Note that `]]` and `[[` are already provided by default in this plugin, but this is a good example of how to use `jsfile`:
 
 ```
 exmap nextHeading jsfile mdHelpers.js {jumpHeading(true)}
@@ -402,6 +418,13 @@ div.status-bar-item.vimrc-support-vim-mode[data-vim-mode="replace"] {
 Note that the above snippet uses powerline glygh for the triangular shape, so you need to install a [powerline font](https://github.com/powerline/fonts) to display correctly. And of course, feel free to change the CSS variables to whatever color palette you want!
 
 ## Changelog
+
+### 0.10.0
+
+- Most notably, support for *many* new default mappings, see [here](https://github.com/esm7/obsidian-vimrc-support/pull/222) -- thanks @alythobani for this great contribution!
+- Fixed https://github.com/esm7/obsidian-vimrc-support/issues/228.
+- Added a license file, at last!
+
 
 ### 0.9.0
 
