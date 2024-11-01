@@ -1,8 +1,13 @@
 # Obsidian Vimrc Support Plugin
 
+> [!IMPORTANT]
+> In Obsidian 1.7.2 and beyond, `<CR>` needs to be added for normal mode Ex command mappings, e.g. `nmap <F9> :nohl<CR>` instead of `nmap <F9> :nohl` (similarly to "real" Vim).
+> This is due to a breaking change in the underlying `codemirror-vim` library.
+> Normal mode movements, e.g. `map j gj`, remain as-is.
+
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/esm7)
 
-This plugin loads a file of Vim commands from `VAULT_ROOT/.obsidian.vimrc`.
+This plugin loads a file of Vim commands from `path/to/VaultName/.obsidian.vimrc`.
 For users of the Obsidian.md Vim mode, this is very useful for making various settings (most notably keymaps) persist.
 
 Note that this plugin is **not** the Vim support of Obsidian -- that support is built-in and you can perfectly use Obsidian in Vim mode without this plugin.
@@ -18,7 +23,7 @@ Anyone who wishes to take over, please message me.
 
 First and foremost, make sure you have the Obsidian Vim key bindings turned on -- see Editor -> Vim key bindings.
 
-Now to keep some of your Vim settings permanent, install this plugin and put a file named `.obsidian.vimrc` in your vault root.
+Now to keep some of your Vim settings permanent, install this plugin and put a file named `.obsidian.vimrc` in your vault root (*not* inside the `.obsidian` directory).
 If you're using multiple vaults, you'll need this file on each one.
 
 **For iOS/iPadOS users**, it's highly recommended to set "Paste from Other Apps" of Obsidian to Allow, so there won't be annoying popups.
@@ -33,7 +38,7 @@ nmap k gk
 nmap H ^
 nmap L $
 " Quickly remove search highlights
-nmap <F9> :nohl
+nmap <F9> :nohl<CR>
 
 " Yank to system clipboard
 set clipboard=unnamed
@@ -41,9 +46,9 @@ set clipboard=unnamed
 " Go back and forward with Ctrl+O and Ctrl+I
 " (make sure to remove default Obsidian shortcuts for these to work)
 exmap back obcommand app:go-back
-nmap <C-o> :back
+nmap <C-o> :back<CR>
 exmap forward obcommand app:go-forward
-nmap <C-i> :forward
+nmap <C-i> :forward<CR>
 ```
 
 ## Supported Commands
@@ -140,7 +145,7 @@ You now have a simple (0 argument) Ex command named `back` that goes back in Obs
 To summarize, here's how you map `C-o` to Back:
 ```
 exmap back obcommand app:go-back
-nmap <C-o> :back
+nmap <C-o> :back<CR>
 ```
 
 Note how `exmap` lists command names without colons and in `nmap` the colon is required.
@@ -170,19 +175,19 @@ exmap surround_square_brackets surround [ ]
 exmap surround_curly_brackets surround { }
 
 " NOTE: must use 'map' and not 'nmap'
-map [[ :surround_wiki
+map [[ :surround_wiki<CR>
 nunmap s
 vunmap s
-map s" :surround_double_quotes
-map s' :surround_single_quotes
-map s` :surround_backticks
-map sb :surround_brackets
-map s( :surround_brackets
-map s) :surround_brackets
-map s[ :surround_square_brackets
-map s[ :surround_square_brackets
-map s{ :surround_curly_brackets
-map s} :surround_curly_brackets
+map s" :surround_double_quotes<CR>
+map s' :surround_single_quotes<CR>
+map s` :surround_backticks<CR>
+map sb :surround_brackets<CR>
+map s( :surround_brackets<CR>
+map s) :surround_brackets<CR>
+map s[ :surround_square_brackets<CR>
+map s[ :surround_square_brackets<CR>
+map s{ :surround_curly_brackets<CR>
+map s} :surround_curly_brackets<CR>
 ```
 
 Usage:
@@ -215,20 +220,20 @@ Using `obcommand`, it is possible to emulate some additional Vim commands that a
 ```vim
 " Emulate Folding https://vimhelp.org/fold.txt.html#fold-commands
 exmap togglefold obcommand editor:toggle-fold
-nmap zo :togglefold
-nmap zc :togglefold
-nmap za :togglefold
+nmap zo :togglefold<CR>
+nmap zc :togglefold<CR>
+nmap za :togglefold<CR>
 
 exmap unfoldall obcommand editor:unfold-all
-nmap zR :unfoldall
+nmap zR :unfoldall<CR>
 
 exmap foldall obcommand editor:fold-all
-nmap zM :foldall
+nmap zM :foldall<CR>
 
 exmap tabnext obcommand workspace:next-tab
-nmap gt :tabnext
+nmap gt :tabnext<CR>
 exmap tabprev obcommand workspace:previous-tab
-nmap gT :tabprev
+nmap gT :tabprev<CR>
 
 ```
 
@@ -280,7 +285,7 @@ If you want, you can make this an Ex command using `exmap`:
 
 ```
 exmap logCursor jscommand { console.log(editor.getCursor()); }
-nmap <C-q> :logCursor
+nmap <C-q> :logCursor<CR>
 ```
 
 #### JSCommand - JSFile
@@ -295,8 +300,8 @@ Here's an example `.obsidian.vimrc` entry that maps `]]` and `[[` to jump to the
 ```
 exmap nextHeading jsfile mdHelpers.js {jumpHeading(true)}
 exmap prevHeading jsfile mdHelpers.js {jumpHeading(false)}
-nmap ]] :nextHeading
-nmap [[ :prevHeading
+nmap ]] :nextHeading<CR>
+nmap [[ :prevHeading<CR>
 ```
 
 See [here](JsSnippets.md) for the full example, and please contribute your own!
@@ -418,6 +423,10 @@ div.status-bar-item.vimrc-support-vim-mode[data-vim-mode="replace"] {
 Note that the above snippet uses powerline glygh for the triangular shape, so you need to install a [powerline font](https://github.com/powerline/fonts) to display correctly. And of course, feel free to change the CSS variables to whatever color palette you want!
 
 ## Changelog
+
+### Not yet released
+
+- Fixed https://github.com/esm7/obsidian-vimrc-support/pull/246 (thanks @baodrate!)
 
 ### 0.10.1
 

@@ -153,6 +153,7 @@ export default class VimrcPlugin extends Plugin {
 		if (!view) return;
 
 		let cm = this.getCodeMirror(view);
+		if (!cm) return;
 		if (
 			this.getCursorActivityHandlers(cm).some(
 				(e: { name: string }) => e.name === "updateSelection")
@@ -180,6 +181,8 @@ export default class VimrcPlugin extends Plugin {
 			this.currentVimStatus = vimStatus.normal;
 			if (this.settings.displayVimMode)
 				this.updateVimStatusBar();
+
+			if (!cmEditor) return;
 			cmEditor.off('vim-mode-change', this.logVimModeChange);
 			cmEditor.on('vim-mode-change', this.logVimModeChange);
 
@@ -483,7 +486,7 @@ export default class VimrcPlugin extends Plugin {
 		// Function to surround selected text or highlighted word.
 		var surroundFunc = (params: string[]) => {
 			var editor = this.getActiveView().editor;
-			if (!params.length) {
+			if (!params?.length) {
 				throw new Error("surround requires exactly 2 parameters: prefix and postfix text.");
 			}
 			let newArgs = params.join(" ").match(/(\\.|[^\s\\\\]+)+/g);
@@ -505,7 +508,7 @@ export default class VimrcPlugin extends Plugin {
 				}
 			}
 			if (editor.posToOffset(chosenSelection.anchor) > editor.posToOffset(chosenSelection.head)) {
-				[chosenSelection.anchor, chosenSelection.head] = [chosenSelection.head, chosenSelection.anchor]
+				[chosenSelection.anchor, chosenSelection.head] = [chosenSelection.head, chosenSelection.anchor];
 			}
 			let currText = editor.getRange(chosenSelection.anchor, chosenSelection.head);
 			editor.replaceRange(beginning + currText + ending, chosenSelection.anchor, chosenSelection.head);
@@ -592,7 +595,9 @@ export default class VimrcPlugin extends Plugin {
 			this.vimChordStatusBar.parentElement.insertBefore(this.vimChordStatusBar, parent.firstChild);
 			this.vimChordStatusBar.style.marginRight = "auto";
 
-			let cmEditor = this.getCodeMirror(this.getActiveView());
+			const view = this.getActiveView();
+			if (!view) return;
+			let cmEditor = this.getCodeMirror(view);
 			// See https://codemirror.net/doc/manual.html#vimapi_events for events.
 			cmEditor.off('vim-keypress', this.onVimKeypress);
 			cmEditor.on('vim-keypress', this.onVimKeypress);
