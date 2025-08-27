@@ -265,7 +265,7 @@ export default class VimrcPlugin extends Plugin {
 	}
 
 	private getActiveView(): MarkdownView {
-		return this.app.workspace.getActiveViewOfType(MarkdownView);
+		return this.app.workspace.getActiveViewOfType(MarkdownView) || this.app.workspace.activeLeaf.view;
 	}
 
 	getActiveObsidianEditor(): ObsidianEditor {
@@ -622,6 +622,7 @@ export default class VimrcPlugin extends Plugin {
 	}
 
 	onVimCommandDone = async (reason: any) => {
+		await new Promise(resolve => setTimeout(resolve, 100));
 		this.vimChordStatusBar?.setText("");
 		this.currentKeyChord = [];
 	}
